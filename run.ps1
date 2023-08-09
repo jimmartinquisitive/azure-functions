@@ -1,13 +1,18 @@
 param($Timer)
 
+# Timezone, disable hours, and enable hours variables
+$timeZone = "Eastern Standard Time"
+$disableHours = 20
+$enableHours = 6
+
 # Define timezone
-$easternTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("Eastern Standard Time")
-$currentTime = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $easternTimeZone)
+$specifiedTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById($timeZone)
+$currentTime = [System.TimeZoneInfo]::ConvertTimeFromUtc((Get-Date).ToUniversalTime(), $specifiedTimeZone)
 $currentDayOfWeek = $currentTime.DayOfWeek
 
 # Common variables
-$resourceGroupName = "RGNAME"
-$storageAccountName = "SANAME"
+$resourceGroupName = "RG-NAME"
+$storageAccountName = "SA-NAME"
 
 # Log the current day and time
 Write-Host "Current day of the week: $currentDayOfWeek at time: $currentTime"
@@ -21,11 +26,11 @@ Write-Host "Current SFTP state: $sftpStatus"
 
 # Check if the day is between Monday and Friday
 if ($currentDayOfWeek -ge [System.DayOfWeek]::Monday -and $currentDayOfWeek -le [System.DayOfWeek]::Friday) {
-    if ($currentTime.Hour -ge 20) {
+    if ($currentTime.Hour -ge $disableHours) {
         Set-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName -EnableSftp $false
         Write-Host "SFTP disabled"
         $actionTaken = $true
-    } elseif ($currentTime.Hour -ge 6) {
+    } elseif ($currentTime.Hour -ge $enableHours) {
         Set-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName -EnableSftp $true
         Write-Host "SFTP enabled"
         $actionTaken = $true
@@ -33,7 +38,7 @@ if ($currentDayOfWeek -ge [System.DayOfWeek]::Monday -and $currentDayOfWeek -le 
 }
 # Check if the day is Saturday
 elseif ($currentDayOfWeek -eq [System.DayOfWeek]::Saturday) {
-    if ($currentTime.Hour -ge 20) {
+    if ($currentTime.Hour -ge $disableHours) {
         Set-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName -EnableSftp $false
         Write-Host "SFTP disabled"
         $actionTaken = $true
